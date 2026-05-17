@@ -4,5 +4,10 @@ export function getManagerApiBaseUrl() {
     return ""
   }
 
-  return raw.replace(/\/+$/, "")
+  const normalized = raw.replace(/\/+$/, "")
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(normalized)) {
+    return normalized
+  }
+
+  return `http://${normalized}`
 }

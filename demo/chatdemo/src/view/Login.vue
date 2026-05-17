@@ -5,6 +5,20 @@ import { useRouter, useRoute } from "vue-router";
 import { WKSDK } from 'wukongimjssdk';
 const router = useRouter();
 
+const normalizeBaseUrl = (raw: string | undefined | null) => {
+  const value = (raw ?? '').trim()
+  if (!value) {
+    return ''
+  }
+
+  const withoutTrailingSlash = value.replace(/\/+$/, '')
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(withoutTrailingSlash)) {
+    return withoutTrailingSlash
+  }
+
+  return `http://${withoutTrailingSlash}`
+}
+
 
 const getUrlParam = (name: string) => {
   var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); // 构造一个含有目标参数的正则表达式对象
@@ -14,15 +28,13 @@ const getUrlParam = (name: string) => {
 }
 
 var apiurl = getUrlParam("apiurl")
+const defaultApiUrl = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL) || "http://127.0.0.1:5001"
 
 
 if (!apiurl || apiurl?.trim() == "") {
-  apiurl = "http://127.0.0.1:5001"
+  apiurl = defaultApiUrl
 } else {
-  // 去掉 apiurl后的 “/”
-  if (apiurl && apiurl.endsWith("/")) {
-    apiurl = apiurl.substring(0, apiurl.length - 1)
-  }
+  apiurl = normalizeBaseUrl(apiurl)
 }
 
 
@@ -36,7 +48,7 @@ const username = ref('')
 const password = ref('')
 
 const login = () => {
-  APIClient.shared.config.apiURL = apiAddr.value
+  APIClient.shared.config.apiURL = normalizeBaseUrl(apiAddr.value)
   // 注意：这里的登录接口是悟空IM的演示接口，仅供演示使用，这些接口不应该暴露给前端，应该由后端封装后提供给前端
   APIClient.shared.post('/user/token', {
     uid: username.value, // 第三方服务端的用户唯一uid
